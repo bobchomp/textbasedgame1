@@ -1,0 +1,6 @@
+#!/bin/sh
+# Keep game.txt as an exact mirror of game.py on every commit.
+if [ -f game.py ]; then
+    cp game.py game.txt
+    git add game.txt
+fi

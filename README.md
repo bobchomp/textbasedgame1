@@ -35,3 +35,16 @@ way out — defeat it to win. Escaping with the Heart gives the true ending.
 
 Progress is saved to `kharzul_save.json` in this folder; delete it to start
 fresh, or choose "New Game" from the main menu.
+
+## `game.txt`
+
+`game.txt` is a plain-text mirror of `game.py`, kept byte-identical to it. A
+git hook (`.githooks/pre-commit`) re-copies `game.py` over `game.txt` on
+every commit, so they never drift apart in the repo's history. If you clone
+this repo elsewhere and want that same auto-sync locally, run once:
+
+```
+git config core.hooksPath .githooks
+```
+
+Edit `game.py`, not `game.txt` — `game.txt` is only ever a generated copy.
