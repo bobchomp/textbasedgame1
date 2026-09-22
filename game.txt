@@ -254,6 +254,7 @@ class Player:
         self.shield = None
         self.score = 0
         self.visited = {"entrance_hall"}
+        self.previous_location = None
 
     def defense(self):
         if self.shield and self.shield in ITEMS:
@@ -275,6 +276,7 @@ class Player:
             "inventory": self.inventory, "weapon": self.weapon,
             "shield": self.shield, "score": self.score,
             "visited": list(self.visited),
+            "previous_location": self.previous_location,
         }
 
     @classmethod
@@ -288,6 +290,7 @@ class Player:
         p.shield = data["shield"]
         p.score = data["score"]
         p.visited = set(data["visited"])
+        p.previous_location = data.get("previous_location")
         return p
 
 
@@ -444,6 +447,12 @@ class Game:
             if self._check_death():
                 return
 
+        self._enter_room(target)
+
+    def _enter_room(self, target, trigger_ambush=True):
+        """Move the player into `target`, applying entry hazards, then describe
+        it and (optionally) let a waiting enemy ambush the player."""
+        self.player.previous_location = self.player.location
         self.player.location = target
         if target not in self.player.visited:
             self.player.visited.add(target)
@@ -461,6 +470,8 @@ class Game:
             return
 
         self.look()
+        if trigger_ambush:
+            self.maybe_start_combat()
 
     # -- inventory / items ----------------------------------------------
 
@@ -665,7 +676,12 @@ class Game:
                 self.use_item(action[4:].strip())
             elif action in ("flee", "run", "f"):
                 if random.random() < template["flee_chance"]:
-                    print("You break away and flee!")
+                    retreat_to = self.player.previous_location
+                    if retreat_to not in ROOMS:
+                        retreat_to = "entrance_hall"
+                    print("You break away and flee back toward the {}!".format(
+                        ROOMS[retreat_to]["name"]))
+                    self._enter_room(retreat_to, trigger_ambush=False)
                     return
                 else:
                     print("You can't get away!")
@@ -835,7 +851,6 @@ class Game:
             self.handle_command(raw)
             if self.game_over:
                 break
-            self.maybe_start_combat()
 
 
 # ---------------------------------------------------------------------------
